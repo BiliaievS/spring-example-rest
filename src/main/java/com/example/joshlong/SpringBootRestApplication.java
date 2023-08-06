@@ -1,5 +1,8 @@
 package com.example.joshlong;
 
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -30,15 +33,19 @@ public class SpringBootRestApplication {
 @ResponseBody
 class CustomerController {
     private final CustomerRepository repository;
+    private final ObservationRegistry registry;
 
-    CustomerController(CustomerRepository repository) {
+    CustomerController(CustomerRepository repository, ObservationRegistry registry) {
         this.repository = repository;
+        this.registry = registry;
     }
 
     @GetMapping("/customers/{name}")
     Iterable<Customer> byName(@PathVariable String name) {
         Assert.state(Character.isUpperCase(name.charAt(0)), "The name must start with an uppercase letter");
-        return repository.findByName(name);
+        return Observation.createNotStarted("by-name", this.registry)
+                //http://localhost:8080/actuator/metrics/by-name
+                .observe(() -> repository.findByName(name));
     }
 
     @GetMapping("/customers")
@@ -51,12 +58,14 @@ class CustomerController {
 class ErrorHandlingControllerAdvice {
 
     @ExceptionHandler
-    ProblemDetail handle(IllegalStateException ise) {
+    ProblemDetail handle(IllegalStateException ise, HttpServletRequest request) {
+        request.getHeaderNames().asIterator().forEachRemaining(System.out::println);
         var pd = ProblemDetail.forStatus(HttpStatus.BAD_REQUEST.value());
         pd.setDetail(ise.getMessage());
         return pd;
     }
 }
+
 interface CustomerRepository extends CrudRepository<Customer, Integer> {
 
     Iterable<Customer> findByName(String name);
