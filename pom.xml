@@ -6,10 +6,15 @@
     <groupId>com.example</groupId>
     <artifactId>spring-boot-rest</artifactId>
     <version>0.0.1-SNAPSHOT</version>
-    <packaging>jar</packaging>
+    <packaging>pom</packaging>
 
     <name>spring-boot-rest</name>
     <description>Demo project for Spring Boot</description>
+
+    <modules>
+        <module>proxy-client</module>
+        <module>customer-service</module>
+    </modules>
 
     <parent>
         <groupId>org.springframework.boot</groupId>
