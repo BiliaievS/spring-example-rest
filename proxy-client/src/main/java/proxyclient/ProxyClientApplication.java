@@ -63,5 +63,7 @@ interface CustomerClient {
 }
 
 record Customer(Integer id, String name) {
+}
 
+record Profile(Integer id) {
 }
